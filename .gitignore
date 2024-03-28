@@ -1,0 +1,5 @@
+venv/
+fitness_app/static/
+.DS_STore
+.env
+.idea/
