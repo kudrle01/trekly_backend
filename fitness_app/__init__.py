@@ -1,6 +1,7 @@
 # app.py or wherever you define your Flask application
 from datetime import timedelta
 from flask import Flask
+from flask_cors import CORS, cross_origin
 import os
 from dotenv import load_dotenv
 from flask_apscheduler import APScheduler
@@ -29,7 +30,8 @@ db = MongoEngine()
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='fitness_app/build')
+    CORS(app)
 
     # Configuration settings
     MONGO_URI = f"mongodb+srv://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWORD')}@{os.getenv('MONGO_HOST')}/?retryWrites=true&w=majority"

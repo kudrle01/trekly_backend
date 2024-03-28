@@ -9,6 +9,7 @@ dnspython==2.4.2
 email_validator==2.1.1
 Flask==3.0.0
 Flask-APScheduler==1.13.1
+Flask-Cors==4.0.0
 Flask-JWT-Extended==4.6.0
 flask-mongoengine @ git+https://github.com/idoshr/flask-mongoengine.git@e244408acf440c4208f7ddcd6e5d819cb472e4da
 Flask-WTF==1.2.1
