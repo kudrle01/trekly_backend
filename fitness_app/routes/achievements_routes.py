@@ -1,65 +1,83 @@
-from flask import Blueprint, jsonify
+from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine import DoesNotExist
+from bson import ObjectId
 
-from fitness_app.models import User, AchievementGained, Achievement
+from fitness_app.models import User, Achievement, AchievementGained, Workout
 
 achievements_bp = Blueprint('achievements', __name__)
 
 
+@achievements_bp.route('/check', methods=['GET'])
+@jwt_required()
+def check_achievements():
+    current_user_id = get_jwt_identity()
+    try:
+        user = User.objects.get(id=ObjectId(current_user_id))
+
+        # Calculate workouts and workoutMinutes for the user
+        workouts = Workout.objects(user_id=user).count()
+        workoutMinutes = sum(workout.duration for workout in Workout.objects(user_id=user))
+
+        all_achievements = Achievement.objects  # Fetch all achievements
+        achievements_gained = AchievementGained.objects(user=user).only('achievement')
+        gained_achievement_ids = {gained.achievement.id for gained in achievements_gained}
+
+        newly_gained_achievements = []
+
+        for achievement in all_achievements:
+            if achievement.id in gained_achievement_ids:
+                continue  # Skip if already gained
+
+            conditions_met = all([
+                (user.streak >= condition.streakNumber or condition.streakNumber == 0) and
+                (workouts >= condition.workoutsNumber or condition.workoutsNumber == 0) and
+                (workoutMinutes >= condition.minutes or condition.minutes == 0)
+                for condition in achievement.conditions
+            ])
+
+            if conditions_met:
+                AchievementGained(user=user, achievement=achievement).save()
+                newly_gained_achievements.append({
+                    "name": achievement.name,
+                    "description": achievement.description
+                })
+
+        # Check if any achievements were gained
+        if newly_gained_achievements:
+            return jsonify(newly_gained_achievements), 200
+        else:
+            return jsonify([]), 200  # Return an empty list if no new achievements were gained
+
+    except DoesNotExist:
+        return jsonify({"message": "User not found"}), 404
+
+
+@achievements_bp.route('/<user_id>', methods=['GET'])
+@jwt_required()
+def user_achievements(user_id):
+    try:
+        achievements_gained = AchievementGained.objects(user=user_id)
+
+        achievements = [{
+            "name": gain.achievement.name,
+            "description": gain.achievement.description,
+            "timestamp": gain.timestamp
+        } for gain in achievements_gained]
+
+        return jsonify(achievements), 200
+
+    except DoesNotExist:
+        return jsonify({"message": "User not found"}), 404
+
+
 @achievements_bp.route('/all', methods=['GET'])
 def list_achievements():
-    achievements = Achievement.objects.all()
-    achievements_data = []
-    for achievement in achievements:
-        achievements_data.append({
-            'id': str(achievement.id),
-            'name': achievement.name,
-            'description': achievement.description,
-            'conditions': achievement.conditions
-        })
-    return jsonify(achievements_data), 200
+    achievements = Achievement.objects
+    achievements_list = [{
+        "name": achievement.name,
+        "description": achievement.description,
+        "conditions": achievement.conditions  # You might want to format this more nicely
+    } for achievement in achievements]
 
-
-@achievements_bp.route('/award/<achievement_id>', methods=['POST'])
-@jwt_required()
-def award_achievement(achievement_id):
-    user_id = get_jwt_identity()
-    try:
-        user = User.objects.get(id=user_id)
-        achievement = Achievement.objects.get(id=achievement_id)
-
-        # Check if the user already has this achievement
-        if AchievementGained.objects(user=user, achievement=achievement).first():
-            return jsonify({'message': 'User already has this achievement'}), 400
-
-        AchievementGained(user=user, achievement=achievement).save()
-        return jsonify({'message': 'Achievement awarded successfully'}), 200
-    except DoesNotExist:
-        return jsonify({'error': 'User or achievement not found'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@achievements_bp.route('/user', methods=['GET'])
-@jwt_required()
-def user_achievements():
-    user_id = get_jwt_identity()
-    try:
-        user = User.objects.get(id=user_id)
-        achievements_gained = AchievementGained.objects(user=user)
-        achievements_data = []
-        for achievement in achievements_gained:
-            achievements_data.append({
-                'id': str(achievement.achievement.id),
-                'name': achievement.achievement.name,
-                'description': achievement.achievement.description,
-                'awarded_on': achievement.timestamp
-            })
-        return jsonify(achievements_data), 200
-    except DoesNotExist:
-        return jsonify({'error': 'User not found'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
+    return jsonify(achievements_list), 200

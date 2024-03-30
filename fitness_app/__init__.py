@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from flask_apscheduler import APScheduler
 from flask_jwt_extended import JWTManager
 from flask_mongoengine import MongoEngine
+
 # routes/blueprints
 from .routes.auth_routes import auth_bp
 from .routes.comments_routes import comments_bp
@@ -17,6 +18,9 @@ from .routes.likes_routes import likes_bp
 from .routes.routines_routes import routines_bp
 from .routes.workouts_routes import workouts_bp
 from .routes.users_routes import users_bp
+from .routes.achievements_routes import achievements_bp
+
+
 from .utils.reset_user_streaks import reset_user_streaks
 from .utils.refill_rest_days import refill_rest_days
 import cloudinary
@@ -76,6 +80,7 @@ def create_app():
     app.register_blueprint(follows_bp, url_prefix='/follows')
     app.register_blueprint(likes_bp, url_prefix='/likes')
     app.register_blueprint(comments_bp, url_prefix='/comments')
+    app.register_blueprint(achievements_bp, url_prefix='/achievements')
 
     scheduler = APScheduler()
     scheduler.init_app(app)

@@ -38,7 +38,7 @@ class AchievementGained(Document):
     achievement = ReferenceField(Achievement, required=True)
     timestamp = DateTimeField(default=datetime.datetime.now)
 
-    meta = {'collection': 'achievements_gained'}
+    meta = {'collection': 'achievementsGained'}
 
 
 class Follow(Document):
