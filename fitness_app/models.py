@@ -122,3 +122,11 @@ class WorkoutComment(Document):
     timestamp = DateTimeField(default=datetime.datetime.now)
 
     meta = {'collection': 'workoutComments'}
+
+
+class Notification(Document):
+    user_id = ReferenceField(User, required=True)
+    action = StringField(required=True)
+    target_workout = ReferenceField(Workout, required=False)
+    timestamp = DateTimeField(required=True)
+    meta = {'collection': 'notifications'}

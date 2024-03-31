@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from bson import ObjectId
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine.errors import ValidationError, DoesNotExist
-from fitness_app.models import WorkoutLike, User, Workout
+from fitness_app.models import WorkoutLike, User, Workout, Notification
 
 likes_bp = Blueprint('likes', __name__)
 
@@ -12,17 +14,25 @@ likes_bp = Blueprint('likes', __name__)
 def like_workout(workout_id):
     user_id = get_jwt_identity()
     try:
-        # Fetch the user and workout to ensure they exist and to use them in the WorkoutLike document
         user = User.objects.get(id=user_id)
         workout = Workout.objects.get(id=workout_id)
 
-        # Check if already liked
         if WorkoutLike.objects(user_id=user, workout_id=workout).first():
             return jsonify({"message": "Workout already liked."}), 400
 
-        # Create new like
         new_like = WorkoutLike(user_id=user, workout_id=workout)
         new_like.save()
+
+        # Check if the workout being liked is not the user's own workout
+        if str(workout.user.id) != str(user_id):
+            # Create a notification for the workout owner
+            Notification(
+                user=workout.user,  # Note that the notification's user is the workout owner, not the liker
+                action='like',
+                target_workout=workout,
+                timestamp=datetime.utcnow()
+            ).save()
+
         return jsonify({"message": "Workout liked successfully."}), 200
     except (ValidationError, DoesNotExist):
         return jsonify({"error": "Invalid user or workout ID."}), 400
@@ -37,11 +47,17 @@ def unlike_workout(workout_id):
         workout = Workout.objects.get(id=workout_id)
 
         like = WorkoutLike.objects(user_id=user, workout_id=workout).first()
-
         if not like:
             return jsonify({"message": "Workout not previously liked."}), 400
 
+        # Delete the like
         like.delete()
+
+        # Find and delete the corresponding notification
+        notification = Notification.objects(user=user, action='like', target_workout=workout).first()
+        if notification:
+            notification.delete()
+
         return jsonify({"message": "Workout unlike successful."}), 200
     except (ValidationError, DoesNotExist):
         return jsonify({"error": "Invalid user or workout ID."}), 400

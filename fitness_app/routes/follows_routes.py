@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from fitness_app.models import Follow, User  # Adjust the import path as necessary
+from fitness_app.models import Follow, User, Notification  # Adjust the import path as necessary
 from mongoengine.errors import NotUniqueError
 
 follows_bp = Blueprint('follows', __name__)
@@ -28,10 +30,19 @@ def follow_user(user_id):
     # Create new follow relationship
     try:
         Follow(followed=followed, follower=follower).save()
+
+        # Create a notification for the followed user
+        Notification(
+            user=followed,  # the user being followed
+            action='follow',
+            timestamp=datetime.utcnow(),
+            # Additional information can be added to the notification if needed
+        ).save()
+
+        return jsonify({"message": "Successfully followed the user."}), 200
+
     except NotUniqueError:
         return jsonify({"error": "Follow relationship already exists."}), 400
-
-    return jsonify({"message": "Successfully followed the user."}), 200
 
 
 @follows_bp.route('/unfollow/<user_id>', methods=['POST'])
@@ -42,10 +53,20 @@ def unfollow_user(user_id):
     follower = User.objects(id=current_user_id).first()
     followed = User.objects(id=user_id).first()
 
-    # Check if relationship exists
+    # Check if the follow relationship exists
     follow_relationship = Follow.objects(followed=followed, follower=follower).first()
     if not follow_relationship:
         return jsonify({"message": "Not following this user."}), 400
+
+    # Before removing the follow relationship, delete the corresponding notification
+    notification = Notification.objects(
+        user=followed,  # The user who was followed
+        action='follow',
+        # Here you might need additional criteria if your notifications can have more details
+    ).first()
+
+    if notification:
+        notification.delete()
 
     # Remove follow relationship
     follow_relationship.delete()

@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine.errors import ValidationError
-from fitness_app.models import WorkoutComment, User
+from fitness_app.models import WorkoutComment, User, Notification, Workout
 
 comments_bp = Blueprint('comments', __name__)
 
@@ -20,8 +22,17 @@ def add_comment(workout_id):
         new_comment.save()
 
         user = User.objects.get(id=user_id)
+        workout = Workout.objects.get(id=workout_id)  # Make sure to import Workout model
 
-        # Serialize the new comment for the response
+        # Create a notification for the workout owner
+        if workout.user.id != user_id:  # Don't notify if commenting on own workout
+            Notification(
+                user=workout.user,
+                action='comment',
+                target_workout=workout,
+                timestamp=datetime.utcnow()
+            ).save()
+
         comment_data = {
             "id": str(new_comment.id),
             "workout_id": str(new_comment.workout_id.id),
@@ -74,8 +85,15 @@ def fetch_comments(workout_id):
 @jwt_required()
 def delete_comment(comment_id):
     try:
-        # Find the comment by ID
         comment = WorkoutComment.objects.get(id=comment_id)
+
+        # Delete the associated notification
+        Notification.objects(
+            action='comment',
+            target_workout=comment.workout_id,
+            user=comment.user_id
+        ).delete()
+
         comment.delete()
         return jsonify({"message": "Comment deleted successfully."}), 200
     except WorkoutComment.DoesNotExist:
