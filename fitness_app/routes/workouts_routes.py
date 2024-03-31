@@ -4,7 +4,7 @@ from bson import ObjectId
 from flask import Blueprint, request, jsonify, json
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from fitness_app.models import Workout, User, WorkoutLike, WorkoutComment, Follow
+from fitness_app.models import Workout, User, WorkoutLike, WorkoutComment, Follow, Notification
 from mongoengine.errors import ValidationError
 
 from fitness_app.utils.serializer import serialize_doc
@@ -27,18 +27,18 @@ def fetch_workouts():
         if feed_type == 'followed':
             # Get the list of user_ids that the current user is following
             followed_users_ids = [str(follow.followed.id) for follow in Follow.objects(follower=user_id)]
-            workouts_query = Workout.objects(user_id__in=followed_users_ids).order_by('-timestamp').skip(skip).limit(limit)
+            workouts_query = Workout.objects(user__in=followed_users_ids).order_by('-timestamp').skip(skip).limit(limit)
         else:
             # Exclude workouts from followed users in the global feed
             followed_users_ids = [str(follow.followed.id) for follow in Follow.objects(follower=user_id)]
-            workouts_query = Workout.objects(user_id__nin=followed_users_ids, user_id__ne=user_id).order_by('-timestamp').skip(skip).limit(limit)
+            workouts_query = Workout.objects(user__nin=followed_users_ids, user__ne=user_id).order_by('-timestamp').skip(skip).limit(limit)
 
         # Enhance the workout data with likes and comments
         enhanced_workouts = []
         for workout in workouts_query:
             workout_data = serialize_doc(workout.to_mongo().to_dict())
-            likes_count = WorkoutLike.objects(workout_id=workout.id).count()
-            comments_count = WorkoutComment.objects(workout_id=workout.id).count()
+            likes_count = WorkoutLike.objects(workout=workout.id).count()
+            comments_count = WorkoutComment.objects(workout=workout.id).count()
             workout_data['likesCount'] = likes_count
             workout_data['commentsCount'] = comments_count
             enhanced_workouts.append(workout_data)
@@ -52,7 +52,6 @@ def fetch_workouts():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 @workouts_bp.route("/save", methods=["POST"])
@@ -91,7 +90,7 @@ def save_workout():
 
     # Assuming you have a Workout model and save logic here
     workout = Workout(
-        user_id=user,
+        user=user,
         name=name,
         difficulty=difficulty,
         duration=duration,
@@ -109,9 +108,11 @@ def save_workout():
 def delete_workout(workout_id):
     user_id = get_jwt_identity()
     try:
-        workout = Workout.objects.get(id=workout_id, user_id=user_id)
+        workout = Workout.objects.get(id=workout_id, user=user_id)
+        # Delete related notifications before deleting the workout
+        Notification.objects(targetWorkout=workout).delete()
         workout.delete()
-        return jsonify({"message": "Workout deleted successfully"}), 200
+        return jsonify({"message": "Workout and related notifications deleted successfully"}), 200
     except Workout.DoesNotExist:
         return jsonify({"error": "Workout not found or not authorized to delete"}), 404
     except Exception as e:

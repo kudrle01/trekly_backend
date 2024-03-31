@@ -15,3 +15,4 @@ def serialize_doc(doc):
 
 def serialize_documents(query):
     return [serialize_doc(doc.to_mongo().to_dict()) for doc in query]
+

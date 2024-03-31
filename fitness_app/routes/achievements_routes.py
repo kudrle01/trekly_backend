@@ -16,8 +16,8 @@ def check_achievements():
         user = User.objects.get(id=ObjectId(current_user_id))
 
         # Calculate workouts and workoutMinutes for the user
-        workouts = Workout.objects(user_id=user).count()
-        workoutMinutes = sum(workout.duration for workout in Workout.objects(user_id=user))
+        workouts = Workout.objects(user=user).count()
+        workoutMinutes = sum(workout.duration for workout in Workout.objects(user=user))
 
         all_achievements = Achievement.objects  # Fetch all achievements
         achievements_gained = AchievementGained.objects(user=user).only('achievement')
@@ -57,7 +57,7 @@ def check_achievements():
 @jwt_required()
 def user_achievements(user_id):
     try:
-        achievements_gained = AchievementGained.objects(user=user_id)
+        achievements_gained = AchievementGained.objects(user=ObjectId(user_id))
 
         achievements = [{
             "name": gain.achievement.name,

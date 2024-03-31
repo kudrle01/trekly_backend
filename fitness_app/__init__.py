@@ -15,6 +15,7 @@ from .routes.exercises_routes import exercises_bp
 from .routes.follows_routes import follows_bp
 from .routes.images_routes import images_bp
 from .routes.likes_routes import likes_bp
+from .routes.notifications_routes import notifications_bp
 from .routes.routines_routes import routines_bp
 from .routes.workouts_routes import workouts_bp
 from .routes.users_routes import users_bp
@@ -81,6 +82,7 @@ def create_app():
     app.register_blueprint(likes_bp, url_prefix='/likes')
     app.register_blueprint(comments_bp, url_prefix='/comments')
     app.register_blueprint(achievements_bp, url_prefix='/achievements')
+    app.register_blueprint(notifications_bp, url_prefix='/notifications')
 
     scheduler = APScheduler()
     scheduler.init_app(app)

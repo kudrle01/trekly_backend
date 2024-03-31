@@ -87,7 +87,7 @@ class WorkoutExercise(EmbeddedDocument):
 
 
 class Routine(Document):
-    user_id = ReferenceField(User, required=True)
+    user = ReferenceField(User, required=True)
     name = StringField(max_length=100, required=True)
     exercises = ListField(EmbeddedDocumentField(WorkoutExercise), required=True)
 
@@ -95,7 +95,7 @@ class Routine(Document):
 
 
 class Workout(Document):
-    user_id = ReferenceField(User, required=True)
+    user = ReferenceField(User, required=True)
     name = StringField(max_length=100, required=True)
     duration = IntField(required=True)
     difficulty = IntField(required=True)
@@ -108,16 +108,16 @@ class Workout(Document):
 
 
 class WorkoutLike(Document):
-    user_id = ReferenceField(User, required=True)
-    workout_id = ReferenceField(Workout, required=True)  # Assuming a Post model exists
+    user = ReferenceField(User, required=True)
+    workout = ReferenceField(Workout, required=True)  # Assuming a Post model exists
     timestamp = DateTimeField(default=datetime.datetime.now)
 
     meta = {'collection': 'workoutLikes'}
 
 
 class WorkoutComment(Document):
-    user_id = ReferenceField(User, required=True)
-    workout_id = ReferenceField(Workout, required=True)
+    user = ReferenceField(User, required=True)
+    workout = ReferenceField(Workout, required=True)
     body = StringField(required=True)
     timestamp = DateTimeField(default=datetime.datetime.now)
 
@@ -125,8 +125,9 @@ class WorkoutComment(Document):
 
 
 class Notification(Document):
-    user_id = ReferenceField(User, required=True)
+    user = ReferenceField(User, required=True)
+    initiator = ReferenceField(User, required=True)
     action = StringField(required=True)
-    target_workout = ReferenceField(Workout, required=False)
-    timestamp = DateTimeField(required=True)
+    targetWorkout = ReferenceField(Workout, required=False)
+    timestamp = DateTimeField(default=datetime.datetime.utcnow)
     meta = {'collection': 'notifications'}

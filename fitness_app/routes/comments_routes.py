@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine.errors import ValidationError
@@ -18,30 +19,32 @@ def add_comment(workout_id):
         return jsonify({"error": "Comment body is required."}), 400
 
     try:
-        new_comment = WorkoutComment(user_id=user_id, workout_id=workout_id, body=body)
+        initiator = User.objects.get(id=user_id)
+        workout = Workout.objects.get(id=workout_id)
+
+        new_comment = WorkoutComment(user=initiator, workout=workout, body=body)
         new_comment.save()
 
-        user = User.objects.get(id=user_id)
-        workout = Workout.objects.get(id=workout_id)  # Make sure to import Workout model
-
-        # Create a notification for the workout owner
-        if workout.user.id != user_id:  # Don't notify if commenting on own workout
+        # Create a notification for the workout owner if the commenter isn't the owner
+        if str(workout.user.id) != user_id:
             Notification(
-                user=workout.user,
+                user=workout.user,  # Workout owner receives the notification
+                initiator=initiator,  # The commenter
                 action='comment',
-                target_workout=workout,
+                targetWorkout=workout,
                 timestamp=datetime.utcnow()
             ).save()
 
+        # Prepare and return the comment data
         comment_data = {
-            "id": str(new_comment.id),
-            "workout_id": str(new_comment.workout_id.id),
+            "_id": str(new_comment.id),
+            "workout_id": str(workout.id),
             "body": new_comment.body,
             "timestamp": new_comment.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
             "user": {
-                "_id": str(new_comment.user_id.id),
-                "username": user.username,
-                "profilePhotoUrl": user.profilePhotoUrl
+                "_id": str(initiator.id),
+                "username": initiator.username,
+                "profilePhotoUrl": initiator.profilePhotoUrl
             }
         }
 
@@ -54,7 +57,7 @@ def add_comment(workout_id):
 @jwt_required()
 def fetch_comments(workout_id):
     try:
-        comments = WorkoutComment.objects(workout_id=workout_id)
+        comments = WorkoutComment.objects(workout=workout_id)
 
         # This will hold the comments data including user details
         comments_data = []
@@ -62,15 +65,15 @@ def fetch_comments(workout_id):
         for comment in comments:
 
             # Fetch the user for each comment
-            user = User.objects.get(id=comment.user_id.id)
+            user = User.objects.get(id=comment.user.id)
             # Now, add the comment and user details to comments_data
             comments_data.append({
                 "_id": str(comment.id),
-                "workout_id": str(comment.workout_id.id),
+                "workout_id": str(comment.workout.id),
                 "body": comment.body,
-                "timestamp": comment.timestamp,
+                "timestamp": comment.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                 "user": {
-                    "_id": str(comment.user_id.id),
+                    "_id": str(comment.user.id),
                     "username": user.username,
                     "profilePhotoUrl": user.profilePhotoUrl
                 }
@@ -87,11 +90,11 @@ def delete_comment(comment_id):
     try:
         comment = WorkoutComment.objects.get(id=comment_id)
 
-        # Delete the associated notification
+        # Delete the associated notification, using both the workout and the commenter
         Notification.objects(
             action='comment',
-            target_workout=comment.workout_id,
-            user=comment.user_id
+            targetWorkout=comment.workout,
+            initiator=comment.user  # Ensure to match the notification by the initiator
         ).delete()
 
         comment.delete()

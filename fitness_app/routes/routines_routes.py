@@ -12,7 +12,7 @@ routines_bp = Blueprint('routines', __name__)
 @jwt_required()
 def fetch_routines():
     user_id = get_jwt_identity()
-    routines = Routine.objects(user_id=ObjectId(user_id)).first()
+    routines = Routine.objects(user=ObjectId(user_id)).first()
     return jsonify([serialize_doc(routine.to_mongo().to_dict()) for routine in routines])
 
 
@@ -36,7 +36,7 @@ def save_routine():
 
     try:
         routine = Routine(
-            user_id=ObjectId(user_id),
+            user=ObjectId(user_id),
             name=name,
             exercises=routine_exercises
         ).save()
@@ -64,7 +64,7 @@ def delete_routine():
         return jsonify({"error": "Routine not found"}), 404
 
     routines = {
-        "routines": serialize_documents(Routine.objects(user_id=ObjectId(user_id))),
+        "routines": serialize_documents(Routine.objects(user=ObjectId(user_id))),
     }
     return jsonify(routines), 200
 

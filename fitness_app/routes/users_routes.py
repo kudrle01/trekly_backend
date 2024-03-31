@@ -13,7 +13,7 @@ users_bp = Blueprint('users', __name__)
 @jwt_required()
 def get_user_profile():
     user_id = get_jwt_identity()
-    user = User.objects(id=ObjectId(user_id)).first()
+    user = User.objects(id=user_id).first()
     if not user:
         return error_response("User not found", 401)
 
@@ -26,8 +26,8 @@ def get_user_profile():
         "lastStreakEvidence": user.lastStreakEvidence,
         "streak": user.streak,
         "restDays": user.restDays,
-        "workouts": serialize_documents(Workout.objects(user_id=ObjectId(user_id))),
-        "routines": serialize_documents(Routine.objects(user_id=ObjectId(user_id))),
+        "workouts": serialize_documents(Workout.objects(user=ObjectId(user_id))),
+        "routines": serialize_documents(Routine.objects(user=ObjectId(user_id))),
         "followers": serialize_documents(Follow.objects(followed=ObjectId(user_id))),
         "following": serialize_documents(Follow.objects(follower=ObjectId(user_id))),
     }
@@ -37,7 +37,8 @@ def get_user_profile():
 @users_bp.route('/user/<user_id>', methods=['GET'])
 @jwt_required()
 def get_user_profile_by_id(user_id):
-    user = User.objects(id=ObjectId(user_id)).first()
+
+    user = User.objects(id=user_id).first()
     if not user:
         return error_response("User not found", 401)
     user_data = {
@@ -49,8 +50,8 @@ def get_user_profile_by_id(user_id):
         "lastStreakEvidence": user.lastStreakEvidence,
         "streak": user.streak,
         "restDays": user.restDays,
-        "workouts": serialize_documents(Workout.objects(user_id=ObjectId(user_id))),
-        "routines": serialize_documents(Routine.objects(user_id=ObjectId(user_id))),
+        "workouts": serialize_documents(Workout.objects(user=ObjectId(user_id))),
+        "routines": serialize_documents(Routine.objects(user=ObjectId(user_id))),
         "followers": serialize_documents(Follow.objects(followed=ObjectId(user_id))),
         "following": serialize_documents(Follow.objects(follower=ObjectId(user_id))),
     }
