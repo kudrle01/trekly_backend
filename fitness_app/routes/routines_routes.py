@@ -45,11 +45,11 @@ def save_routine():
         return jsonify({"error": str(e)}), 500
 
 
-@routines_bp.route("/delete", methods=['DELETE'])
+@routines_bp.route("/delete/<routine_id>", methods=['DELETE'])
 @jwt_required()
-def delete_routine():
+def delete_routine(routine_id):
     user_id = get_jwt_identity()
-    routine_id = request.json.get('routine_id')
+
     if not routine_id:
         return jsonify({"error": "Routine ID is required"}), 400
 
