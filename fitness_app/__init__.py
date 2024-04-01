@@ -88,7 +88,7 @@ def create_app():
     scheduler.init_app(app)
     scheduler.start()
 
-    scheduler.add_job(id='Reset Streaks', func=reset_user_streaks, trigger='cron', hour=14, minute=52)
+    scheduler.add_job(id='Reset Streaks', func=reset_user_streaks, trigger='cron', hour=0, minute=1)
     scheduler.add_job(id='Refill Rest Days', func=refill_rest_days, trigger='cron', day=1, hour=0, minute=1)
 
     return app
