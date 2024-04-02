@@ -17,7 +17,7 @@ def check_achievements():
 
         # Calculate workouts and workoutMinutes for the user
         workouts = Workout.objects(user=user).count()
-        workoutMinutes = sum(workout.duration for workout in Workout.objects(user=user))
+        workoutMinutes = sum(workout.duration for workout in Workout.objects(user=user))/60
 
         all_achievements = Achievement.objects  # Fetch all achievements
         achievements_gained = AchievementGained.objects(user=user).only('achievement')

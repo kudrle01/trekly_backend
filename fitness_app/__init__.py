@@ -37,7 +37,6 @@ db = MongoEngine()
 def create_app():
     app = Flask(__name__, static_folder='fitness_app/build')
     CORS(app)
-
     # Configuration settings
     MONGO_URI = f"mongodb+srv://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWORD')}@{os.getenv('MONGO_HOST')}/?retryWrites=true&w=majority"
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
