@@ -129,5 +129,5 @@ class Notification(Document):
     initiator = ReferenceField(User, required=True)
     action = StringField(required=True)
     targetWorkout = ReferenceField(Workout, required=False)
-    timestamp = DateTimeField(default=datetime.datetime.utcnow)
+    timestamp = DateTimeField(default=datetime.datetime.now)
     meta = {'collection': 'notifications'}

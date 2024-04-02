@@ -71,7 +71,7 @@ def fetch_comments(workout_id):
                 "_id": str(comment.id),
                 "workout_id": str(comment.workout.id),
                 "body": comment.body,
-                "timestamp": comment.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                "timestamp": comment.timestamp,
                 "user": {
                     "_id": str(comment.user.id),
                     "username": user.username,
