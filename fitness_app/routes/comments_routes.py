@@ -32,7 +32,7 @@ def add_comment(workout_id):
                 initiator=initiator,  # The commenter
                 action='comment',
                 targetWorkout=workout,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now()
             ).save()
 
         # Prepare and return the comment data
@@ -40,7 +40,7 @@ def add_comment(workout_id):
             "_id": str(new_comment.id),
             "workout_id": str(workout.id),
             "body": new_comment.body,
-            "timestamp": new_comment.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            "timestamp": new_comment.timestamp.isoformat(),
             "user": {
                 "_id": str(initiator.id),
                 "username": initiator.username,
@@ -71,13 +71,15 @@ def fetch_comments(workout_id):
                 "_id": str(comment.id),
                 "workout_id": str(comment.workout.id),
                 "body": comment.body,
-                "timestamp": comment.timestamp,
+                "timestamp": comment.timestamp.isoformat(),
                 "user": {
                     "_id": str(comment.user.id),
                     "username": user.username,
                     "profilePhotoUrl": user.profilePhotoUrl
                 }
             })
+
+        comments_data.reverse()
 
         return jsonify(comments_data), 200
     except ValidationError as e:
