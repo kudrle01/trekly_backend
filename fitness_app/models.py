@@ -1,6 +1,6 @@
 from mongoengine import Document, StringField, EmailField, IntField, DateTimeField, DateField, EmbeddedDocument, \
     EmbeddedDocumentField, ListField, URLField, ReferenceField, BooleanField
-import datetime
+from datetime import datetime, timezone
 
 
 # User model
@@ -10,7 +10,7 @@ class User(Document):
     email = EmailField(required=True, unique=True)
     birthDate = DateField(required=True)
     gender = StringField(required=True)
-    registrationDate = DateTimeField(default=datetime.datetime.now)
+    registrationDate = DateTimeField(default=lambda: datetime.now(timezone.utc))
     profilePhotoUrl = StringField(default=None)
     lastStreakEvidence = DateField()
     streak = IntField(default=0)
@@ -36,7 +36,7 @@ class Achievement(Document):
 class AchievementGained(Document):
     user = ReferenceField(User, required=True)
     achievement = ReferenceField(Achievement, required=True)
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {'collection': 'achievementsGained'}
 
@@ -44,7 +44,7 @@ class AchievementGained(Document):
 class Follow(Document):
     followed = ReferenceField(User, required=True, dbref_id_field='id_followed')
     follower = ReferenceField(User, required=True, dbref_id_field='id_following')
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {'collection': 'follows'}
 
@@ -99,7 +99,7 @@ class Workout(Document):
     name = StringField(max_length=100, required=True)
     duration = IntField(required=True)
     difficulty = IntField(required=True)
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
     imageUrl = StringField(default=None)
     postContent = StringField(max_length=100)
     exercises = ListField(EmbeddedDocumentField(WorkoutExercise), required=True)
@@ -110,7 +110,7 @@ class Workout(Document):
 class WorkoutLike(Document):
     user = ReferenceField(User, required=True)
     workout = ReferenceField(Workout, required=True)  # Assuming a Post model exists
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {'collection': 'workoutLikes'}
 
@@ -119,7 +119,7 @@ class WorkoutComment(Document):
     user = ReferenceField(User, required=True)
     workout = ReferenceField(Workout, required=True)
     body = StringField(required=True)
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {'collection': 'workoutComments'}
 
@@ -129,5 +129,5 @@ class Notification(Document):
     initiator = ReferenceField(User, required=True)
     action = StringField(required=True)
     targetWorkout = ReferenceField(Workout, required=False)
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
     meta = {'collection': 'notifications'}

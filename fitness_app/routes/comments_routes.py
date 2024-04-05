@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine.errors import ValidationError
 from fitness_app.models import WorkoutComment, User, Notification, Workout
+from fitness_app.utils.serializer import serialize_doc
 
 comments_bp = Blueprint('comments', __name__)
 
@@ -32,20 +33,15 @@ def add_comment(workout_id):
                 initiator=initiator,  # The commenter
                 action='comment',
                 targetWorkout=workout,
-                timestamp=datetime.now()
             ).save()
 
         # Prepare and return the comment data
-        comment_data = {
-            "_id": str(new_comment.id),
-            "workout_id": str(workout.id),
-            "body": new_comment.body,
-            "timestamp": new_comment.timestamp.isoformat(),
-            "user": {
-                "_id": str(initiator.id),
-                "username": initiator.username,
-                "profilePhotoUrl": initiator.profilePhotoUrl
-            }
+        comment_data = serialize_doc(new_comment.to_mongo().to_dict())
+        # Embed user details directly into the comment data
+        comment_data['user'] = {
+            "_id": str(initiator.id),
+            "username": initiator.username,
+            "profilePhotoUrl": initiator.profilePhotoUrl
         }
 
         return jsonify(comment_data), 200
@@ -63,24 +59,22 @@ def fetch_comments(workout_id):
         comments_data = []
 
         for comment in comments:
+            # Serialize the comment document
+            comment_data = serialize_doc(comment.to_mongo().to_dict())
 
             # Fetch the user for each comment
-            user = User.objects.get(id=comment.user.id)
-            # Now, add the comment and user details to comments_data
-            comments_data.append({
-                "_id": str(comment.id),
-                "workout_id": str(comment.workout.id),
-                "body": comment.body,
-                "timestamp": comment.timestamp.isoformat(),
-                "user": {
-                    "_id": str(comment.user.id),
-                    "username": user.username,
-                    "profilePhotoUrl": user.profilePhotoUrl
-                }
-            })
+            user = comment.user
+
+            # Embed user details directly into the comment data
+            comment_data['user'] = {
+                "_id": str(user.id),
+                "username": user.username,
+                "profilePhotoUrl": user.profilePhotoUrl
+            }
+
+            comments_data.append(comment_data)
 
         comments_data.reverse()
-
         return jsonify(comments_data), 200
     except ValidationError as e:
         return jsonify({"error": str(e)}), 400
