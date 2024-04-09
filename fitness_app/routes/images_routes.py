@@ -38,7 +38,8 @@ def exercise_image(exercise_id):
     sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
         "/", "")
     image_url, options = cloudinary_url(f"exercises/{sanitized_id}", secure=True)
-    return image_url
+    https_url = image_url.replace('http://', 'https://')
+    return redirect(https_url)
 
 
 @images_bp.route('/exercises-static/<exercise_id>', methods=['GET'])
@@ -49,16 +50,19 @@ def exercise_static_image(exercise_id):
     sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
         "/", "")
     image_url, options = cloudinary_url(f"exercises_static/{sanitized_id}", secure=True)
-    return image_url
+    https_url = image_url.replace('http://', 'https://')
+    return redirect(https_url)
 
 
 @images_bp.route('/user/<user_id>', methods=['GET'])
 def user_image(user_id):
     image_url, options = cloudinary_url(f"userProfile/{user_id}", secure=True)
-    return image_url
+    https_url = image_url.replace('http://', 'https://')
+    return redirect(https_url)
 
 
 @images_bp.route('/posts/<post_id>', methods=['GET'])
 def post_image(post_id):
     image_url, options = cloudinary_url(f"posts/{post_id}", secure=True)
-    return image_url
+    https_url = image_url.replace('http://', 'https://')
+    return redirect(https_url)
