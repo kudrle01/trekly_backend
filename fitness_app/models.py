@@ -3,7 +3,7 @@ from mongoengine import Document, StringField, EmailField, IntField, DateTimeFie
 from datetime import datetime, timezone
 
 
-# User model with indexing on username and email for faster lookup.
+# User model
 class User(Document):
     username = StringField(max_length=100, required=True, unique=True)
     password = StringField(required=True)
@@ -16,13 +16,7 @@ class User(Document):
     streak = IntField(default=0)
     restDays = IntField(default=10)
 
-    meta = {
-        'collection': 'users',
-        'indexes': [
-            {'fields': ['username'], 'unique': True, 'background': True},
-            {'fields': ['email'], 'unique': True, 'background': True},
-        ]
-    }
+    meta = {'collection': 'users'}
 
 
 class AchievementCondition(EmbeddedDocument):
@@ -31,18 +25,12 @@ class AchievementCondition(EmbeddedDocument):
     minutes = IntField(default=0)
 
 
-# Indexing might not be directly applicable for Achievement as it heavily depends on use cases.
 class Achievement(Document):
     name = StringField(max_length=100, required=True)
     description = StringField(required=True)
     conditions = ListField(EmbeddedDocumentField(AchievementCondition), required=True)
 
-    meta = {
-        'collection': 'achievements',
-        'indexes': [
-            {'fields': ['name'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'achievements'}
 
 
 class AchievementGained(Document):
@@ -50,13 +38,7 @@ class AchievementGained(Document):
     achievement = ReferenceField(Achievement, required=True)
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
-    meta = {
-        'collection': 'achievementsGained',
-        'indexes': [
-            {'fields': ['user', 'achievement'], 'background': True},
-            {'fields': ['timestamp'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'achievementsGained'}
 
 
 class Follow(Document):
@@ -64,13 +46,7 @@ class Follow(Document):
     follower = ReferenceField(User, required=True, dbref_id_field='id_following')
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
-    meta = {
-        'collection': 'follows',
-        'indexes': [
-            {'fields': ['followed', 'follower'], 'background': True},
-            {'fields': ['timestamp'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'follows'}
 
 
 class BodyPart(Document):
@@ -78,24 +54,14 @@ class BodyPart(Document):
     pplPlan = StringField(required=True)
     ulPlan = StringField(required=True)
 
-    meta = {
-        'collection': 'bodyParts',
-        'indexes': [
-            {'fields': ['name'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'bodyParts'}
 
 
 class Equipment(Document):
     name = StringField(required=True)
     type = StringField(required=True)
 
-    meta = {
-        'collection': 'equipment',
-        'indexes': [
-            {'fields': ['name'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'equipment'}
 
 
 class ExerciseSet(EmbeddedDocument):
@@ -107,17 +73,12 @@ class ExerciseSet(EmbeddedDocument):
 class Exercise(Document):
     bodyPart = ReferenceField(BodyPart, required=True)
     equipment = ReferenceField(Equipment, required=True)
-    name = StringField(required=True)
+    name = StringField(required=True)  # Consider adding if exercises have names or identifiers
     target = StringField(required=True)
     secondaryMuscles = ListField(StringField())
     instructions = ListField(StringField())
 
-    meta = {
-        'collection': 'exercises',
-        'indexes': [
-            {'fields': ['bodyPart', 'equipment'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'exercises'}
 
 
 class WorkoutExercise(EmbeddedDocument):
@@ -130,12 +91,7 @@ class Routine(Document):
     name = StringField(max_length=100, required=True)
     exercises = ListField(EmbeddedDocumentField(WorkoutExercise), required=True)
 
-    meta = {
-        'collection': 'routines',
-        'indexes': [
-            {'fields': ['user'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'routines'}
 
 
 class Workout(Document):
@@ -148,27 +104,15 @@ class Workout(Document):
     postContent = StringField(max_length=100)
     exercises = ListField(EmbeddedDocumentField(WorkoutExercise), required=True)
 
-    meta = {
-        'collection': 'workouts',
-        'indexes': [
-            {'fields': ['user'], 'background': True},
-            {'fields': ['timestamp'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'workouts'}
 
 
 class WorkoutLike(Document):
     user = ReferenceField(User, required=True)
-    workout = ReferenceField(Workout, required=True)
+    workout = ReferenceField(Workout, required=True)  # Assuming a Post model exists
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
-    meta = {
-        'collection': 'workoutLikes',
-        'indexes': [
-            {'fields': ['user', 'workout'], 'background': True},
-            {'fields': ['timestamp'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'workoutLikes'}
 
 
 class WorkoutComment(Document):
@@ -177,13 +121,7 @@ class WorkoutComment(Document):
     body = StringField(required=True)
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
-    meta = {
-        'collection': 'workoutComments',
-        'indexes': [
-            {'fields': ['user', 'workout'], 'background': True},
-            {'fields': ['timestamp'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'workoutComments'}
 
 
 class Notification(Document):
@@ -192,11 +130,4 @@ class Notification(Document):
     action = StringField(required=True)
     targetWorkout = ReferenceField(Workout, required=False)
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
-
-    meta = {
-        'collection': 'notifications',
-        'indexes': [
-            {'fields': ['user'], 'background': True},
-            {'fields': ['timestamp'], 'background': True},
-        ]
-    }
+    meta = {'collection': 'notifications'}
