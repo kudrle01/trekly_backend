@@ -63,5 +63,4 @@ def user_image(user_id):
 @images_bp.route('/posts/<post_id>', methods=['GET'])
 def post_image(post_id):
     image_url, options = cloudinary_url(f"posts/{post_id}", secure=True)
-    https_url = image_url.replace('http://', 'https://')
-    return redirect(https_url)
+    return redirect(image_url)
