@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine import ValidationError
 
 from fitness_app.models import Notification
-from fitness_app.utils.serializer import serialize_documents, serialize_doc
+from fitness_app.utils.serializer import serialize_doc
 
 notifications_bp = Blueprint('notifications', __name__)
 

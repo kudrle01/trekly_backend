@@ -131,3 +131,23 @@ class Notification(Document):
     targetWorkout = ReferenceField(Workout, required=False)
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
     meta = {'collection': 'notifications'}
+
+
+class UserReport(Document):
+    reporter = ReferenceField(User, required=True, dbref_id_field='id_reporter')
+    reported = ReferenceField(User, required=True, dbref_id_field='id_reported')
+    reason = StringField(required=True)
+    isResolved = BooleanField(default=False)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
+
+    meta = {'collection': 'userReports'}
+
+
+class WorkoutReport(Document):
+    reporter = ReferenceField(User, required=True, dbref_id_field='id_reporter')
+    workout = ReferenceField(Workout, required=True, dbref_id_field='id_workout')
+    reason = StringField(required=True)
+    isResolved = BooleanField(default=False)
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
+
+    meta = {'collection': 'workoutReports'}
