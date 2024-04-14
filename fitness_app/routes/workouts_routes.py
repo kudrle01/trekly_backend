@@ -4,7 +4,7 @@ from bson import ObjectId
 from flask import Blueprint, request, jsonify, json
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from fitness_app.models import Workout, User, WorkoutLike, WorkoutComment, Follow, Notification
+from fitness_app.models import Workout, User, WorkoutLike, WorkoutComment, Follow, Notification, Block
 from mongoengine.errors import ValidationError
 
 from fitness_app.utils.serializer import serialize_doc
@@ -23,24 +23,26 @@ def fetch_workouts():
     skip = (page - 1) * limit
     feed_type = request.args.get('feedType', 'global')  # Default to 'global' if not specified
 
+    # Get IDs of users who are blocked or have blocked the current user
+    blocked_users_ids = [str(block.blocked.id) for block in Block.objects(blocking=user_id)] + \
+                        [str(block.blocking.id) for block in Block.objects(blocked=user_id)]
+
     try:
         if feed_type == 'followed':
-            # Get the list of user_ids that the current user is following
+            # Fetch only from followed users, excluding blocked users
             followed_users_ids = [str(follow.followed.id) for follow in Follow.objects(follower=user_id)]
-            workouts_query = Workout.objects(user__in=followed_users_ids).order_by('-timestamp').skip(skip).limit(limit)
+            valid_followed_ids = [uid for uid in followed_users_ids if uid not in blocked_users_ids]
+            workouts_query = Workout.objects(user__in=valid_followed_ids).order_by('-timestamp').skip(skip).limit(limit)
         else:
-            # Exclude workouts from followed users in the global feed
-            followed_users_ids = [str(follow.followed.id) for follow in Follow.objects(follower=user_id)]
-            workouts_query = Workout.objects(user__nin=followed_users_ids, user__ne=user_id).order_by('-timestamp').skip(skip).limit(limit)
+            # Exclude blocked users and the user themselves from the global feed
+            workouts_query = Workout.objects(user__nin=blocked_users_ids + [user_id]).order_by('-timestamp').skip(skip).limit(limit)
 
-        # Enhance the workout data with likes and comments
         enhanced_workouts = []
         for workout in workouts_query:
             workout_data = serialize_doc(workout.to_mongo().to_dict())
             likes_count = WorkoutLike.objects(workout=workout.id).count()
             comments_count = WorkoutComment.objects(workout=workout.id).count()
-            workout_data['likesCount'] = likes_count
-            workout_data['commentsCount'] = comments_count
+            workout_data.update({'likesCount': likes_count, 'commentsCount': comments_count})
             enhanced_workouts.append(workout_data)
 
         total_workouts_count = workouts_query.count()

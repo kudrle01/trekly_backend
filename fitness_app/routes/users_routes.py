@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, unset_jwt_cookies
 from mongoengine import DoesNotExist
 
 from fitness_app.models import User, Workout, Routine, Follow, WorkoutLike, WorkoutComment, Notification, \
-    AchievementGained, UserReport, WorkoutReport
+    AchievementGained, UserReport, WorkoutReport, Block
 from fitness_app.utils.responses import error_response, success_response
 from fitness_app.utils.serializer import serialize_documents, serialize_doc
 
@@ -69,12 +69,16 @@ def fetch_users():
     username_query = request.args.get('query', '')
     skip = (page - 1) * limit
 
+    # Get IDs of users who are blocked or have blocked the current user
+    blocked_users_ids = [str(block.blocked.id) for block in Block.objects(blocking=user_id)] + \
+                        [str(block.blocking.id) for block in Block.objects(blocked=user_id)]
+
     query = {}
     if username_query:
         query['username'] = {'$regex': username_query, '$options': 'i'}
 
     try:
-        users_query = User.objects(__raw__=query, id__ne=ObjectId(user_id)).skip(skip).limit(limit)
+        users_query = User.objects(__raw__=query, id__ne=ObjectId(user_id), id__nin=blocked_users_ids).skip(skip).limit(limit)
         users = list(users_query)
         # Serialize users to include username and profilePhotoUrl
         user_data = [{
@@ -82,7 +86,7 @@ def fetch_users():
             "username": user.username,
             "profilePhotoUrl": user.profilePhotoUrl
         } for user in users]
-        total_users = User.objects(__raw__=query, id__ne=ObjectId(user_id)).count()
+        total_users = User.objects(__raw__=query, id__ne=ObjectId(user_id), id__nin=blocked_users_ids).count()
         has_more = skip + limit < total_users
 
         return jsonify({

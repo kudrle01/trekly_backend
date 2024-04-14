@@ -151,3 +151,11 @@ class WorkoutReport(Document):
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {'collection': 'workoutReports'}
+
+
+class Block(Document):
+    blocking = ReferenceField(User, required=True, dbref_id_field='id_blocking')
+    blocked = ReferenceField(User, required=True, dbref_id_field='id_blocked')
+    timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
+
+    meta = {'collection': 'userBlocks'}

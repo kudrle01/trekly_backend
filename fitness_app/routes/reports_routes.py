@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine.errors import ValidationError, DoesNotExist
 
-from fitness_app.models import User, Workout, UserReport, WorkoutReport
+from fitness_app.models import User, Workout, UserReport, WorkoutReport, Block, Follow, WorkoutLike, WorkoutComment
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -63,3 +63,35 @@ def report_workout(workout_id):
         return jsonify({"message": "Workout reported successfully."}), 200
     except (ValidationError, DoesNotExist):
         return jsonify({"error": "Invalid workout ID."}), 400
+
+
+@reports_bp.route('/block_user/<blocked_user_id>', methods=['POST'])
+@jwt_required()
+def block_user(blocked_user_id):
+    blocking_user_id = get_jwt_identity()
+    try:
+        blocking_user = User.objects.get(id=blocking_user_id)
+        blocked_user = User.objects.get(id=blocked_user_id)
+
+        # Check if already blocked
+        if Block.objects(blocking=blocking_user, blocked=blocked_user).first():
+            return jsonify({"message": "User already blocked."}), 400
+
+        # Create a new block entry
+        block_entry = Block(blocking=blocking_user, blocked=blocked_user)
+        block_entry.save()
+
+        # Remove follows, likes, and comments from blocker to blocked
+        Follow.objects(followed=blocked_user, follower=blocking_user).delete()
+        Follow.objects(followed=blocking_user, follower=blocked_user).delete()
+        WorkoutLike.objects(user=blocking_user, workout__in=Workout.objects(user=blocked_user)).delete()
+        WorkoutLike.objects(user=blocked_user, workout__in=Workout.objects(user=blocking_user)).delete()
+        WorkoutComment.objects(user=blocking_user, workout__in=Workout.objects(user=blocked_user)).delete()
+        WorkoutComment.objects(user=blocked_user, workout__in=Workout.objects(user=blocking_user)).delete()
+
+        return jsonify({"message": "User blocked successfully."}), 200
+    except ValidationError:
+        return jsonify({"error": "Invalid user ID."}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
