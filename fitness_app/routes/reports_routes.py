@@ -88,6 +88,9 @@ def block_user(blocked_user_id):
         WorkoutLike.objects(user=blocked_user, workout__in=Workout.objects(user=blocking_user)).delete()
         WorkoutComment.objects(user=blocking_user, workout__in=Workout.objects(user=blocked_user)).delete()
         WorkoutComment.objects(user=blocked_user, workout__in=Workout.objects(user=blocking_user)).delete()
+        Notification.objects(user=blocking_user, initiator=blocked_user).delete()
+        Notification.objects(user=blocked_user, initiator=blocking_user).delete()
+
 
         return jsonify({"message": "User blocked successfully."}), 200
     except ValidationError:
