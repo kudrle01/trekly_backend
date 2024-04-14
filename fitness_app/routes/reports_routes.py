@@ -4,12 +4,11 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from mongoengine.errors import ValidationError, DoesNotExist
 
-from fitness_app.models import User, Workout, UserReport, WorkoutReport, Block, Follow, WorkoutLike, WorkoutComment
+from fitness_app.models import User, Workout, UserReport, WorkoutReport, Block, Follow, WorkoutLike, WorkoutComment, Notification
 
 reports_bp = Blueprint('reports', __name__)
 
 
-# Report a user
 @reports_bp.route('/report_user/<user_id>', methods=['POST'])
 @jwt_required()
 def report_user(user_id):
@@ -37,7 +36,6 @@ def report_user(user_id):
         return jsonify({"error": "Invalid user ID."}), 400
 
 
-# Report a workout
 @reports_bp.route('/report_workout/<workout_id>', methods=['POST'])
 @jwt_required()
 def report_workout(workout_id):
@@ -73,7 +71,7 @@ def block_user(blocked_user_id):
         blocking_user = User.objects.get(id=blocking_user_id)
         blocked_user = User.objects.get(id=blocked_user_id)
 
-        # Check if already blocked
+        # Check if the users are already blocked
         if Block.objects(blocking=blocking_user, blocked=blocked_user).first():
             return jsonify({"message": "User already blocked."}), 400
 
@@ -81,7 +79,7 @@ def block_user(blocked_user_id):
         block_entry = Block(blocking=blocking_user, blocked=blocked_user)
         block_entry.save()
 
-        # Remove follows, likes, and comments from blocker to blocked
+        # Remove follows, likes, comments, and notifications
         Follow.objects(followed=blocked_user, follower=blocking_user).delete()
         Follow.objects(followed=blocking_user, follower=blocked_user).delete()
         WorkoutLike.objects(user=blocking_user, workout__in=Workout.objects(user=blocked_user)).delete()
@@ -89,9 +87,13 @@ def block_user(blocked_user_id):
         WorkoutComment.objects(user=blocking_user, workout__in=Workout.objects(user=blocked_user)).delete()
         WorkoutComment.objects(user=blocked_user, workout__in=Workout.objects(user=blocking_user)).delete()
 
+        # Delete notifications involving either user in the context of the block
+        Notification.objects(Q(user=blocking_user) & Q(initiator=blocked_user) |
+                             Q(user=blocked_user) & Q(initiator=blocking_user) |
+                             Q(initiator=blocking_user) | Q(initiator=blocking_user)).delete()
+
         return jsonify({"message": "User blocked successfully."}), 200
     except ValidationError:
         return jsonify({"error": "Invalid user ID."}), 400
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
