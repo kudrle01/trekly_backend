@@ -8,6 +8,8 @@ class User(Document):
     username = StringField(max_length=100, required=True, unique=True)
     password = StringField(required=True)
     email = EmailField(required=True, unique=True)
+    birthDate = DateField()
+    gender = StringField()
     registrationDate = DateTimeField(default=lambda: datetime.now(timezone.utc))
     profilePhotoUrl = StringField(default=None)
     lastStreakEvidence = DateTimeField(default=lambda: datetime.now() - timedelta(days=1))
