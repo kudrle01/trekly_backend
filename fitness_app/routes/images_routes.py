@@ -36,7 +36,7 @@ def exercise_image(exercise_id):
     exercise_name = exercise.name
     # Generate the URL for the image
     sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
-        "/", "").replace("\u0432", "")
+        "/", "")
     image_url, options = cloudinary_url(f"exercises/{sanitized_id}", secure=True)
     https_url = image_url.replace('http://', 'https://')
     return redirect(https_url)
