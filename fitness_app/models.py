@@ -8,8 +8,6 @@ class User(Document):
     username = StringField(max_length=100, required=True, unique=True)
     password = StringField(required=True)
     email = EmailField(required=True, unique=True)
-    birthDate = DateField()
-    gender = StringField()
     registrationDate = DateTimeField(default=lambda: datetime.now(timezone.utc))
     profilePhotoUrl = StringField(default=None)
     lastStreakEvidence = DateTimeField(default=lambda: datetime.now() - timedelta(days=1))
@@ -73,7 +71,7 @@ class ExerciseSet(EmbeddedDocument):
 class Exercise(Document):
     bodyPart = ReferenceField(BodyPart, required=True)
     equipment = ReferenceField(Equipment, required=True)
-    name = StringField(required=True)  # Consider adding if exercises have names or identifiers
+    name = StringField(required=True)
     target = StringField(required=True)
     secondaryMuscles = ListField(StringField())
     instructions = ListField(StringField())
