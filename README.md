@@ -1,7 +1,6 @@
-# TREKLY BACKEND
+# Trekly Backend
 
-## Popis
-TREKLY FRONTEND naleznete zde: https://github.com/kudrle01/trekly_frontend
+Trekly frontend naleznete zde: https://github.com/kudrle01/trekly_frontend
 
 ## Požadavky
 Pro spuštění aplikace je nezbytné mít nainstalované následující:
