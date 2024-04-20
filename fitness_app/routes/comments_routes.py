@@ -26,18 +26,15 @@ def add_comment(workout_id):
         new_comment = WorkoutComment(user=initiator, workout=workout, body=body)
         new_comment.save()
 
-        # Create a notification for the workout owner if the commenter isn't the owner
         if str(workout.user.id) != user_id:
             Notification(
-                user=workout.user,  # Workout owner receives the notification
-                initiator=initiator,  # The commenter
+                user=workout.user,
+                initiator=initiator,
                 action='comment',
                 targetWorkout=workout,
             ).save()
 
-        # Prepare and return the comment data
         comment_data = serialize_doc(new_comment.to_mongo().to_dict())
-        # Embed user details directly into the comment data
         comment_data['user'] = {
             "_id": str(initiator.id),
             "username": initiator.username,
@@ -55,7 +52,6 @@ def fetch_comments(workout_id):
     try:
         comments = WorkoutComment.objects(workout=workout_id)
 
-        # This will hold the comments data including user details
         comments_data = []
 
         for comment in comments:
@@ -90,7 +86,7 @@ def delete_comment(comment_id):
         Notification.objects(
             action='comment',
             targetWorkout=comment.workout,
-            initiator=comment.user  # Ensure to match the notification by the initiator
+            initiator=comment.user
         ).delete()
 
         comment.delete()

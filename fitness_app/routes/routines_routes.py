@@ -25,7 +25,7 @@ def save_routine():
 
     routine_exercises = []
     for ex_data in exercises_data:
-        exercise_id = ex_data.get('_id')  # This should be the ID of the Exercise document
+        exercise_id = ex_data.get('_id')
         sets_data = ex_data.get('sets', [])
 
         routine_exercise = WorkoutExercise(

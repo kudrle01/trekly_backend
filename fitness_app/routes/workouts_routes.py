@@ -90,7 +90,6 @@ def save_workout():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    # Assuming you have a Workout model and save logic here
     workout = Workout(
         user=user,
         name=name,
@@ -98,7 +97,7 @@ def save_workout():
         duration=duration,
         postContent=postContent,
         exercises=exercises,
-        imageUrl=imageUrl  # This could be None if no file was uploaded
+        imageUrl=imageUrl
     )
     workout.save()
 
