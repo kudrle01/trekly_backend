@@ -36,8 +36,20 @@ def exercise_image(exercise_id):
     exercise_name = exercise.name
     # Generate the URL for the image
     sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
-        "/", "").replace("в", "")
+        "/", "")
     image_url, options = cloudinary_url(f"exercises/{sanitized_id}", secure=True)
+    https_url = image_url.replace('http://', 'https://')
+    return redirect(https_url)
+
+
+@images_bp.route('/exercises-static/<exercise_id>', methods=['GET'])
+def exercise_static_image(exercise_id):
+    exercise = Exercise.objects.with_id(exercise_id)
+    exercise_name = exercise.name
+    # Generate the URL for the image
+    sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
+        "/", "")
+    image_url, options = cloudinary_url(f"exercises_static/{sanitized_id}", secure=True)
     https_url = image_url.replace('http://', 'https://')
     return redirect(https_url)
 
