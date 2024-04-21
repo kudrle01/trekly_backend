@@ -1,6 +1,6 @@
 from mongoengine import Document, StringField, EmailField, IntField, DateTimeField, DateField, EmbeddedDocument, \
-    EmbeddedDocumentField, ListField, ReferenceField, BooleanField
-from datetime import datetime, timezone
+    EmbeddedDocumentField, ListField, URLField, ReferenceField, BooleanField
+from datetime import datetime, timedelta, timezone
 
 
 # User model
@@ -12,7 +12,7 @@ class User(Document):
     gender = StringField()
     registrationDate = DateTimeField(default=lambda: datetime.now(timezone.utc))
     profilePhotoUrl = StringField(default=None)
-    lastStreakEvidence = DateTimeField()
+    lastStreakEvidence = DateTimeField(default=lambda: datetime.now() - timedelta(days=1))
     streak = IntField(default=0)
     restDays = IntField(default=10)
 
