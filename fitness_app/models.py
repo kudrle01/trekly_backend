@@ -1,6 +1,6 @@
 from mongoengine import Document, StringField, EmailField, IntField, DateTimeField, DateField, EmbeddedDocument, \
-    EmbeddedDocumentField, ListField, URLField, ReferenceField, BooleanField
-from datetime import datetime, timedelta, timezone
+    EmbeddedDocumentField, ListField, ReferenceField, BooleanField
+from datetime import datetime, timezone
 
 
 # User model
