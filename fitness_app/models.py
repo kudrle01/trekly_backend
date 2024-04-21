@@ -12,7 +12,7 @@ class User(Document):
     gender = StringField()
     registrationDate = DateTimeField(default=lambda: datetime.now(timezone.utc))
     profilePhotoUrl = StringField(default=None)
-    lastStreakEvidence = DateField()
+    lastStreakEvidence = DateTimeField()
     streak = IntField(default=0)
     restDays = IntField(default=10)
 
