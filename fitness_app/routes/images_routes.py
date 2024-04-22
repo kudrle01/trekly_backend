@@ -1,7 +1,7 @@
 import os
 
 from bson import ObjectId
-from cloudinary.uploader import upload
+from cloudinary import CloudinaryImage
 from cloudinary.utils import cloudinary_url
 from flask import Blueprint, request, jsonify, redirect
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -37,20 +37,8 @@ def exercise_image(exercise_id):
     # Generate the URL for the image
     sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
         "/", "")
-    image_url, options = cloudinary_url(f"exercises/{sanitized_id}", secure=True)
-    https_url = image_url.replace('http://', 'https://')
-    return redirect(https_url)
-
-
-@images_bp.route('/exercises-static/<exercise_id>', methods=['GET'])
-def exercise_static_image(exercise_id):
-    exercise = Exercise.objects.with_id(exercise_id)
-    exercise_name = exercise.name
-    # Generate the URL for the image
-    sanitized_id = exercise_name.lower().replace("-", "").replace("(", "").replace(")", "").replace("°", "").replace(
-        "/", "")
-    image_url, options = cloudinary_url(f"exercises_static/{sanitized_id}", secure=True)
-    https_url = image_url.replace('http://', 'https://')
+    image = CloudinaryImage(f"exercises/{sanitized_id}")
+    https_url = image.build_url(secure=True)
     return redirect(https_url)
 
 

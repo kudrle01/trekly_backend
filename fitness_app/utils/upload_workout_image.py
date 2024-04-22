@@ -16,8 +16,7 @@ def upload_workout_image(file):
     """
     try:
         folder = 'posts/'
-        result = upload(file, allowed_formats=['jpg', 'png', 'gif', 'bmp'], folder=folder, secure=True)
-        https_url = result['url'].replace('http://', 'https://')
-        return https_url
+        result = upload(file, allowed_formats=['jpg', 'png', 'gif'], folder=folder, secure=True)
+        return result
     except Exception as e:
         raise Exception(f'Failed to upload image. {str(e)}')
