@@ -48,5 +48,8 @@ Po úspěšném dokončení instalace závislostí a konfigurace nastavení mů�
 ```bash
 python run.py
 ```
+## Automatizované nasazování
+Aplikace využívá Heroku ve spojení s GitHub repozitářem, což umožňuje plynulé a automatizované nasazování změn. Po provedení push změn do hlavní větve repozitáře, Heroku automaticky detekuje tyto změny a spustí proces nasazení. Tento mechanismus zjednodušuje a zrychluje aktualizace aplikace.
+
 ## Licence
 Tento software je distribuován pod licencí uvedenou v souboru `LICENSE`. Pro podrobnosti o vašich právech a omezeních se prosím odkážete na tento dokument.
