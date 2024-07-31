@@ -11,7 +11,7 @@ from flask_mongoengine import MongoEngine
 # routes/blueprints
 from .routes.auth_routes import auth_bp
 from .routes.comments_routes import comments_bp
-from .routes.core_data_routes import core_data_bp
+from .routes.exercises_routes import exercises_bp
 from .routes.follows_routes import follows_bp
 from .routes.images_routes import images_bp
 from .routes.likes_routes import likes_bp
@@ -73,7 +73,7 @@ def create_app():
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(core_data_bp, url_prefix='/core-data')
+    app.register_blueprint(exercises_bp, url_prefix='/exercises')
     app.register_blueprint(images_bp, url_prefix='/images')
     app.register_blueprint(routines_bp, url_prefix='/routines')
     app.register_blueprint(workouts_bp, url_prefix='/workouts')

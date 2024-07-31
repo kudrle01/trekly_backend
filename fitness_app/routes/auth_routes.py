@@ -1,3 +1,4 @@
+from bson import ObjectId
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import (
     create_access_token,
@@ -6,9 +7,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     unset_jwt_cookies
 )
-from mongoengine import DoesNotExist
-from fitness_app.models import User, Workout, Routine, Follow, WorkoutLike, WorkoutComment, Notification, \
-    AchievementGained, UserReport, WorkoutReport
+from fitness_app.models import User
 from fitness_app.utils.bcrypt_utils import check_password, hash_password
 from fitness_app.utils.responses import success_response, error_response
 
@@ -56,37 +55,6 @@ def register():
     access_token = create_access_token(identity=str(new_user.id))
     refresh_token = create_refresh_token(identity=str(new_user.id))
     return success_response({"access_token": access_token, "refresh_token": refresh_token}, 200)
-
-@auth_bp.route('/delete_account', methods=['DELETE'])
-@jwt_required()
-def delete_account():
-    user_id = get_jwt_identity()
-    try:
-        user = User.objects.get(id=user_id)
-
-        WorkoutLike.objects(user=user).delete()
-        WorkoutComment.objects(user=user).delete()
-        Notification.objects(user=user).delete()
-        Notification.objects(initiator=user).delete()
-        AchievementGained.objects(user=user).delete()
-        Follow.objects(followed=user).delete()
-        Follow.objects(follower=user).delete()
-        Routine.objects(user=user).delete()
-        Workout.objects(user=user).delete()
-        UserReport.objects(reporter=user).delete()
-        UserReport.objects(reported=user).delete()
-        WorkoutReport.objects(reporter=user).delete()
-
-        user.delete()
-
-        response = jsonify({"msg": "User account deleted successfully."})
-        unset_jwt_cookies(response)
-        return response, 200
-    except DoesNotExist:
-        return error_response("User not found", 404)
-    except Exception as e:
-        current_app.logger.error(f"Error deleting user account: {str(e)}")
-        return error_response("Failed to delete user account", 500)
 
 
 @auth_bp.route('/token/refresh', methods=['POST'])
