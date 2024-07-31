@@ -1,12 +1,10 @@
 from bson import ObjectId
-from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity, unset_jwt_cookies
-from mongoengine import DoesNotExist
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from fitness_app.models import User, Workout, Routine, Follow, WorkoutLike, WorkoutComment, Notification, \
-    AchievementGained, UserReport, WorkoutReport, Block
+from fitness_app.models import User, Workout, Routine, Follow, Block
 from fitness_app.utils.responses import error_response, success_response
-from fitness_app.utils.serializer import serialize_documents, serialize_doc
+from fitness_app.utils.serializer import serialize_documents
 
 users_bp = Blueprint('users', __name__)
 
@@ -96,35 +94,3 @@ def fetch_users():
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500
-
-
-@users_bp.route('/delete_account', methods=['DELETE'])
-@jwt_required()
-def delete_account():
-    user_id = get_jwt_identity()
-    try:
-        user = User.objects.get(id=user_id)
-
-        WorkoutLike.objects(user=user).delete()
-        WorkoutComment.objects(user=user).delete()
-        Notification.objects(user=user).delete()
-        Notification.objects(initiator=user).delete()
-        AchievementGained.objects(user=user).delete()
-        Follow.objects(followed=user).delete()
-        Follow.objects(follower=user).delete()
-        Routine.objects(user=user).delete()
-        Workout.objects(user=user).delete()
-        UserReport.objects(reporter=user).delete()
-        UserReport.objects(reported=user).delete()
-        WorkoutReport.objects(reporter=user).delete()
-
-        user.delete()
-
-        response = jsonify({"msg": "User account deleted successfully."})
-        unset_jwt_cookies(response)
-        return response, 200
-    except DoesNotExist:
-        return error_response("User not found", 404)
-    except Exception as e:
-        current_app.logger.error(f"Error deleting user account: {str(e)}")
-        return error_response("Failed to delete user account", 500)
