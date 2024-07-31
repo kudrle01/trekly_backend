@@ -3,3 +3,5 @@ fitness_app/static/
 .DS_STore
 .env
 .idea/
+fitness_app/__pycache__
+fitness_app/routes/__pycache__

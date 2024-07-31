@@ -19,6 +19,7 @@ def upload_user_profile_image(file, user_id):
         folder = 'user/'
         public_id = f'{folder}{user_id}'
         result = upload(file, allowed_formats=['jpg', 'png', 'gif'], public_id=public_id, secure=True)
-        return result
+        https_url = result['url'].replace('http://', 'https://')
+        return https_url
     except Exception as e:
         raise Exception(f'Failed to upload image. {str(e)}')
